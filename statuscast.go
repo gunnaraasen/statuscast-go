@@ -39,7 +39,6 @@ type Client struct {
 	Incidents     *IncidentsClient
 	Subscribers   *SubscribersClient
 	Groups        *GroupsClient
-	Teams         *TeamsClient
 	Notifications *NotificationsClient
 	Reports       *ReportsClient
 	Access        *AccessClient
@@ -93,7 +92,6 @@ func New(opts ...Option) (*Client, error) {
 	c.Incidents = &IncidentsClient{c}
 	c.Subscribers = &SubscribersClient{c}
 	c.Groups = &GroupsClient{c}
-	c.Teams = &TeamsClient{c}
 	c.Notifications = &NotificationsClient{c}
 	c.Reports = &ReportsClient{c}
 	c.Access = &AccessClient{c}
@@ -154,14 +152,6 @@ const (
 	ChannelSlack   NotificationChannel = "slack"
 	ChannelTeams   NotificationChannel = "teams"
 	ChannelWebhook NotificationChannel = "webhook"
-)
-
-// PageVisibility controls whether a status page is publicly accessible.
-type PageVisibility string
-
-const (
-	VisibilityPublic  PageVisibility = "public"
-	VisibilityPrivate PageVisibility = "private"
 )
 
 // ComponentType describes the monitoring source of a component.
@@ -242,7 +232,6 @@ type Incident struct {
 	Components     []string           `json:"components"` // component IDs affected
 	CustomFields   map[string]any     `json:"custom_fields,omitempty"`
 	Updates        []IncidentUpdate   `json:"updates"`
-	RCA            *RootCauseAnalysis `json:"rca,omitempty"` // nil until filed
 	ScheduledStart *time.Time         `json:"scheduled_start,omitempty"`
 	ScheduledEnd   *time.Time         `json:"scheduled_end,omitempty"`
 	CreatedAt      time.Time          `json:"created_at"`
@@ -309,27 +298,6 @@ func (ic *IncidentsClient) Resolve(ctx context.Context, incidentID string, req R
 	}, opts...)
 }
 
-// RCARequest defines the content for a root cause analysis report.
-type RCARequest struct {
-	Summary        string `json:"summary"`
-	RootCause      string `json:"root_cause"`
-	Resolution     string `json:"resolution"`
-	PreventionPlan string `json:"prevention_plan"`
-	TemplateID     string `json:"template_id,omitempty"` // optional: populate from an RCA template
-}
-
-// RootCauseAnalysis is a filed post-mortem report attached to an incident.
-type RootCauseAnalysis struct {
-	ID             string    `json:"id"`
-	IncidentID     string    `json:"incident_id"`
-	Summary        string    `json:"summary"`
-	RootCause      string    `json:"root_cause"`
-	Resolution     string    `json:"resolution"`
-	PreventionPlan string    `json:"prevention_plan"`
-	FiledBy        string    `json:"filed_by"`
-	CreatedAt      time.Time `json:"created_at"`
-}
-
 // ─── Subscribers ─────────────────────────────────────────────────────────────
 
 // Subscriber is a user who receives status page notifications.
@@ -388,17 +356,6 @@ type NotificationTemplate struct {
 	Body      string              `json:"body"`              // HTML or Markdown body
 	CreatedAt time.Time           `json:"created_at"`
 	UpdatedAt time.Time           `json:"updated_at"`
-}
-
-// NotificationLog is an immutable audit record for a sent notification.
-type NotificationLog struct {
-	ID          string              `json:"id"`
-	IncidentID  string              `json:"incident_id"`
-	Channel     NotificationChannel `json:"channel"`
-	Recipient   string              `json:"recipient"`
-	Status      string              `json:"status"` // "delivered", "bounced", "pending"
-	SentAt      time.Time           `json:"sent_at"`
-	DeliveredAt *time.Time          `json:"delivered_at,omitempty"`
 }
 
 // NotificationsClient groups notification template and audit log operations.
@@ -471,19 +428,6 @@ type Group struct {
 
 // GroupsClient groups all group management operations.
 type GroupsClient struct{ c *Client }
-
-// ─── Teams ────────────────────────────────────────────────────────────────────
-
-// Team represents a group of internal users for escalation policies.
-type Team struct {
-	ID        string    `json:"id"`
-	Name      string    `json:"name"`
-	Members   []string  `json:"members"` // user IDs
-	CreatedAt time.Time `json:"created_at"`
-}
-
-// TeamsClient groups all team management operations.
-type TeamsClient struct{ c *Client }
 
 // ─── Errors ───────────────────────────────────────────────────────────────────
 

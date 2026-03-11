@@ -3,6 +3,7 @@ package statuscast_test
 import (
 	"context"
 	"net/http"
+	"sync/atomic"
 	"testing"
 
 	statuscast "statuscast-go"
@@ -257,5 +258,93 @@ func TestSubscribersRemove_Unauthorized(t *testing.T) {
 	_, err := c.Subscribers.Remove(context.Background(), "200")
 	if err != statuscast.ErrUnauthorized {
 		t.Errorf("expected ErrUnauthorized, got %v", err)
+	}
+}
+
+func TestSubscribersBulkImport_AllSucceed(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("POST /api/v4/subscriber", jsonHandler(200, subscriberJSON))
+	c := newMockClient(t, mux)
+
+	csv := "email\nalice@example.com\nbob@example.com\n"
+	result, resp, err := c.Subscribers.BulkImport(context.Background(), []byte(csv))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if resp == nil {
+		t.Fatal("expected non-nil response")
+	}
+	if result.Imported != 2 {
+		t.Errorf("Imported = %d; want 2", result.Imported)
+	}
+	if result.Failed != 0 {
+		t.Errorf("Failed = %d; want 0", result.Failed)
+	}
+	if result.Skipped != 0 {
+		t.Errorf("Skipped = %d; want 0", result.Skipped)
+	}
+}
+
+func TestSubscribersBulkImport_SkipsEmptyEmail(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("POST /api/v4/subscriber", jsonHandler(200, subscriberJSON))
+	c := newMockClient(t, mux)
+
+	// Row with whitespace-only email should be skipped, not imported.
+	csv := "email\nalice@example.com\n   \nbob@example.com\n"
+	result, _, err := c.Subscribers.BulkImport(context.Background(), []byte(csv))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Imported != 2 {
+		t.Errorf("Imported = %d; want 2", result.Imported)
+	}
+	if result.Skipped != 1 {
+		t.Errorf("Skipped = %d; want 1", result.Skipped)
+	}
+}
+
+func TestSubscribersBulkImport_PartialFailure(t *testing.T) {
+	var calls atomic.Int32
+	mux := http.NewServeMux()
+	mux.HandleFunc("POST /api/v4/subscriber", func(w http.ResponseWriter, r *http.Request) {
+		n := calls.Add(1)
+		if n == 2 {
+			w.WriteHeader(401)
+			return
+		}
+		jsonHandler(200, subscriberJSON)(w, r)
+	})
+	c := newMockClient(t, mux)
+
+	csv := "email\nalice@example.com\nbob@example.com\n"
+	result, _, err := c.Subscribers.BulkImport(context.Background(), []byte(csv))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Imported != 1 {
+		t.Errorf("Imported = %d; want 1", result.Imported)
+	}
+	if result.Failed != 1 {
+		t.Errorf("Failed = %d; want 1", result.Failed)
+	}
+	if len(result.Errors) != 1 {
+		t.Errorf("len(Errors) = %d; want 1", len(result.Errors))
+	}
+}
+
+func TestSubscribersBulkImport_MissingEmailColumn(t *testing.T) {
+	c, _ := statuscast.New(statuscast.WithAPIKey("key"))
+	_, _, err := c.Subscribers.BulkImport(context.Background(), []byte("name,phone\nAlice,+1555\n"))
+	if err == nil {
+		t.Fatal("expected error for missing email column, got nil")
+	}
+}
+
+func TestSubscribersBulkImport_EmptyCSV(t *testing.T) {
+	c, _ := statuscast.New(statuscast.WithAPIKey("key"))
+	_, _, err := c.Subscribers.BulkImport(context.Background(), []byte(""))
+	if err == nil {
+		t.Fatal("expected error for empty CSV, got nil")
 	}
 }

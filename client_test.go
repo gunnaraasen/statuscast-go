@@ -36,9 +36,6 @@ func TestNew_ValidAPIKey(t *testing.T) {
 	if client.Groups == nil {
 		t.Error("Groups sub-client is nil")
 	}
-	if client.Teams == nil {
-		t.Error("Teams sub-client is nil")
-	}
 	if client.Notifications == nil {
 		t.Error("Notifications sub-client is nil")
 	}

@@ -1,8 +1,12 @@
 package statuscast
 
 import (
+	"bytes"
 	"context"
-	"errors"
+	"encoding/csv"
+	"fmt"
+	"io"
+	"strings"
 
 	api "statuscast-go/internal/statuscast"
 )
@@ -64,9 +68,65 @@ func (sc *SubscribersClient) Add(ctx context.Context, req AddSubscriberRequest, 
 	}
 }
 
-// BulkImport is not supported by the StatusCast API v4.
+// BulkImport imports subscribers from CSV data. The CSV must have an "email" header column.
+// Per-row failures are accumulated in the result rather than returned as an error.
 func (sc *SubscribersClient) BulkImport(ctx context.Context, csvData []byte, opts ...RequestOption) (*BulkImportResult, *Response, error) {
-	return nil, nil, errors.New("not supported by StatusCast API v4")
+	r := csv.NewReader(bytes.NewReader(csvData))
+
+	header, err := r.Read()
+	if err != nil {
+		return nil, nil, fmt.Errorf("csv header: %w", err)
+	}
+
+	emailIdx := -1
+	for i, h := range header {
+		if strings.EqualFold(strings.TrimSpace(h), "email") {
+			emailIdx = i
+			break
+		}
+	}
+	if emailIdx == -1 {
+		return nil, nil, fmt.Errorf("csv missing 'email' column")
+	}
+
+	var result BulkImportResult
+	for rowNum := 1; ; rowNum++ {
+		record, err := r.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			result.Failed++
+			result.Errors = append(result.Errors, BulkImportError{Row: rowNum, Message: err.Error()})
+			continue
+		}
+
+		email := strings.TrimSpace(record[emailIdx])
+		if email == "" {
+			result.Skipped++
+			continue
+		}
+
+		body := api.APIV4SubscriberPostReq{}
+		body.EmailAddress.SetTo(email)
+		body.UseEmail.SetTo(true)
+
+		res, apiErr := sc.c.ogen.APIV4SubscriberPost(ctx, api.OptAPIV4SubscriberPostReq{Set: true, Value: body})
+		if apiErr != nil {
+			result.Failed++
+			result.Errors = append(result.Errors, BulkImportError{Row: rowNum, Email: email, Message: apiErr.Error()})
+			continue
+		}
+		switch res.(type) {
+		case *api.APIV4SubscriberPostOK:
+			result.Imported++
+		default:
+			result.Failed++
+			result.Errors = append(result.Errors, BulkImportError{Row: rowNum, Email: email, Message: "unexpected API response"})
+		}
+	}
+
+	return &result, &Response{}, nil
 }
 
 // Get retrieves a subscriber by ID.

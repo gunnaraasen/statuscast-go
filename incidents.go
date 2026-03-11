@@ -2,7 +2,6 @@ package statuscast
 
 import (
 	"context"
-	"errors"
 
 	api "statuscast-go/internal/statuscast"
 )
@@ -175,11 +174,6 @@ func (ic *IncidentsClient) update(ctx context.Context, id string, req UpdateInci
 	default:
 		return nil, nil, unexpectedResponse(res)
 	}
-}
-
-// FileRCA is not supported by the StatusCast API v4.
-func (ic *IncidentsClient) FileRCA(ctx context.Context, incidentID string, req RCARequest, opts ...RequestOption) (*RootCauseAnalysis, *Response, error) {
-	return nil, nil, errors.New("not supported by StatusCast API v4")
 }
 
 // ─── mapping helpers ─────────────────────────────────────────────────────────

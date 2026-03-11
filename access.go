@@ -2,7 +2,6 @@ package statuscast
 
 import (
 	"context"
-	"errors"
 
 	"github.com/google/uuid"
 
@@ -117,11 +116,6 @@ func (ac *AccessClient) ListUsers(ctx context.Context, page Pagination, opts ...
 	default:
 		return nil, nil, unexpectedResponse(res)
 	}
-}
-
-// SetPageVisibility is not supported by the StatusCast API v4.
-func (ac *AccessClient) SetPageVisibility(ctx context.Context, visibility PageVisibility, opts ...RequestOption) (*Response, error) {
-	return nil, errors.New("not supported by StatusCast API v4")
 }
 
 // ─── mapping helpers ─────────────────────────────────────────────────────────
