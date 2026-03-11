@@ -2,7 +2,6 @@ package statuscast
 
 import (
 	"context"
-	"errors"
 
 	api "statuscast-go/internal/statuscast"
 )
@@ -88,16 +87,6 @@ func (nc *NotificationsClient) ListTemplates(ctx context.Context, page Paginatio
 	default:
 		return nil, nil, unexpectedResponse(res)
 	}
-}
-
-// GetLog is not supported by the StatusCast API v4.
-func (nc *NotificationsClient) GetLog(ctx context.Context, id string, opts ...RequestOption) (*NotificationLog, *Response, error) {
-	return nil, nil, errors.New("not supported by StatusCast API v4")
-}
-
-// ListLogs is not supported by the StatusCast API v4.
-func (nc *NotificationsClient) ListLogs(ctx context.Context, incidentID string, page Pagination, opts ...RequestOption) (*PagedResult[NotificationLog], *Response, error) {
-	return nil, nil, errors.New("not supported by StatusCast API v4")
 }
 
 // ─── mapping helpers ─────────────────────────────────────────────────────────
