@@ -47,6 +47,14 @@ API and facade use different strings for component status. Translation lives in 
 - Facade: `operational`, `degraded_performance`, `major_outage`, `under_maintenance`
 - Both `StatusPartialOutage` and `StatusMajorOutage` map to API `Unavailable`
 
+### Enum constant naming
+Constants use abbreviated names — do not assume full words. Exact names as declared in `statuscast.go`:
+- `StatusDegradedPerf` (not `StatusDegradedPerformance`)
+- `ComponentTypeThirdPt` (not `ComponentTypeThirdParty`)
+- `ChannelEmail`, `ChannelSMS`, `ChannelSlack`, `ChannelTeams`, `ChannelWebhook` (not `NotificationChannel*`)
+- `PostTypeOutage`, `PostTypeMaintenance`, `PostTypeInfo` (not `IncidentPostType*`)
+- `StatusInvestigating`, `StatusIdentified`, `StatusMonitoring`, `StatusResolved` (not `IncidentStatus*`)
+
 ### Unsupported operations
 Six operations have no backing API endpoint and are not implemented (they have been removed from the codebase entirely, along with their associated types):
 `Teams.List`, `Incidents.FileRCA`, `Notifications.GetLog`, `Notifications.ListLogs`, `Reports.ListRCAs`, `Access.SetPageVisibility`
