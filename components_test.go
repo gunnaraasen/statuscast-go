@@ -52,7 +52,7 @@ func TestComponentsGet_Unauthorized(t *testing.T) {
 }
 
 func TestComponentsGet_InvalidID(t *testing.T) {
-	c, _ := statuscast.New(statuscast.WithAPIKey("key"))
+	c := mustNew(t, statuscast.WithAPIKey("key"))
 	_, _, err := c.Components.Get(context.Background(), "not-a-number")
 	if err == nil {
 		t.Fatal("expected error for invalid ID, got nil")
@@ -138,7 +138,7 @@ func TestComponentsCreate_Success(t *testing.T) {
 }
 
 func TestComponentsCreate_InvalidParentID(t *testing.T) {
-	c, _ := statuscast.New(statuscast.WithAPIKey("key"))
+	c := mustNew(t, statuscast.WithAPIKey("key"))
 	_, _, err := c.Components.Create(context.Background(), statuscast.CreateComponentRequest{
 		Name:     "Sub",
 		ParentID: "not-a-number",
@@ -181,7 +181,7 @@ func TestComponentsUpdate_Success(t *testing.T) {
 }
 
 func TestComponentsUpdate_InvalidID(t *testing.T) {
-	c, _ := statuscast.New(statuscast.WithAPIKey("key"))
+	c := mustNew(t, statuscast.WithAPIKey("key"))
 	_, _, err := c.Components.Update(context.Background(), "bad-id", statuscast.UpdateComponentRequest{})
 	if err == nil {
 		t.Fatal("expected error for invalid ID, got nil")
@@ -203,7 +203,7 @@ func TestComponentsDelete_Success(t *testing.T) {
 }
 
 func TestComponentsDelete_InvalidID(t *testing.T) {
-	c, _ := statuscast.New(statuscast.WithAPIKey("key"))
+	c := mustNew(t, statuscast.WithAPIKey("key"))
 	_, err := c.Components.Delete(context.Background(), "bad-id")
 	if err == nil {
 		t.Fatal("expected error for invalid ID, got nil")

@@ -93,7 +93,7 @@ func TestSubscribersAdd_WithGroupsAndComponents(t *testing.T) {
 }
 
 func TestSubscribersAdd_InvalidGroupID(t *testing.T) {
-	c, _ := statuscast.New(statuscast.WithAPIKey("key"))
+	c := mustNew(t, statuscast.WithAPIKey("key"))
 	_, _, err := c.Subscribers.Add(context.Background(), statuscast.AddSubscriberRequest{
 		Email:  "test@example.com",
 		Groups: []string{"not-a-number"},
@@ -138,7 +138,7 @@ func TestSubscribersGet_Success(t *testing.T) {
 }
 
 func TestSubscribersGet_InvalidID(t *testing.T) {
-	c, _ := statuscast.New(statuscast.WithAPIKey("key"))
+	c := mustNew(t, statuscast.WithAPIKey("key"))
 	_, _, err := c.Subscribers.Get(context.Background(), "bad-id")
 	if err == nil {
 		t.Fatal("expected error for invalid ID, got nil")
@@ -194,7 +194,7 @@ func TestSubscribersList_WithGroupFilter(t *testing.T) {
 }
 
 func TestSubscribersList_InvalidGroupID(t *testing.T) {
-	c, _ := statuscast.New(statuscast.WithAPIKey("key"))
+	c := mustNew(t, statuscast.WithAPIKey("key"))
 	_, _, err := c.Subscribers.List(context.Background(), "not-a-number", statuscast.Pagination{})
 	if err == nil {
 		t.Fatal("expected error for invalid group ID, got nil")
@@ -221,7 +221,7 @@ func TestSubscribersUpdate_Success(t *testing.T) {
 }
 
 func TestSubscribersUpdate_InvalidID(t *testing.T) {
-	c, _ := statuscast.New(statuscast.WithAPIKey("key"))
+	c := mustNew(t, statuscast.WithAPIKey("key"))
 	_, _, err := c.Subscribers.Update(context.Background(), "bad-id", statuscast.UpdateSubscriberRequest{})
 	if err == nil {
 		t.Fatal("expected error for invalid ID, got nil")
@@ -243,7 +243,7 @@ func TestSubscribersRemove_Success(t *testing.T) {
 }
 
 func TestSubscribersRemove_InvalidID(t *testing.T) {
-	c, _ := statuscast.New(statuscast.WithAPIKey("key"))
+	c := mustNew(t, statuscast.WithAPIKey("key"))
 	_, err := c.Subscribers.Remove(context.Background(), "bad-id")
 	if err == nil {
 		t.Fatal("expected error for invalid ID, got nil")
@@ -334,7 +334,7 @@ func TestSubscribersBulkImport_PartialFailure(t *testing.T) {
 }
 
 func TestSubscribersBulkImport_MissingEmailColumn(t *testing.T) {
-	c, _ := statuscast.New(statuscast.WithAPIKey("key"))
+	c := mustNew(t, statuscast.WithAPIKey("key"))
 	_, _, err := c.Subscribers.BulkImport(context.Background(), []byte("name,phone\nAlice,+1555\n"))
 	if err == nil {
 		t.Fatal("expected error for missing email column, got nil")
@@ -342,7 +342,7 @@ func TestSubscribersBulkImport_MissingEmailColumn(t *testing.T) {
 }
 
 func TestSubscribersBulkImport_EmptyCSV(t *testing.T) {
-	c, _ := statuscast.New(statuscast.WithAPIKey("key"))
+	c := mustNew(t, statuscast.WithAPIKey("key"))
 	_, _, err := c.Subscribers.BulkImport(context.Background(), []byte(""))
 	if err == nil {
 		t.Fatal("expected error for empty CSV, got nil")

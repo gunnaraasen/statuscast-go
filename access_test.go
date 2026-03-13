@@ -84,7 +84,7 @@ func TestAccessUpdateRole_Success(t *testing.T) {
 }
 
 func TestAccessUpdateRole_InvalidID(t *testing.T) {
-	c, _ := statuscast.New(statuscast.WithAPIKey("key"))
+	c := mustNew(t, statuscast.WithAPIKey("key"))
 	_, _, err := c.Access.UpdateRole(context.Background(), "not-a-number", statuscast.RoleManager)
 	if err == nil {
 		t.Fatal("expected error for non-numeric user ID, got nil")
@@ -118,7 +118,7 @@ func TestAccessRemoveUser_Success(t *testing.T) {
 
 func TestAccessRemoveUser_InvalidUUID(t *testing.T) {
 	// RemoveUser requires a UUID; an integer ID should fail.
-	c, _ := statuscast.New(statuscast.WithAPIKey("key"))
+	c := mustNew(t, statuscast.WithAPIKey("key"))
 	_, err := c.Access.RemoveUser(context.Background(), "500")
 	if err == nil {
 		t.Fatal("expected error for non-UUID user ID, got nil")
