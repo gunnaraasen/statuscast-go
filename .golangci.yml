@@ -1,0 +1,47 @@
+version: "2"
+
+linters:
+  default: none
+  enable:
+    - errcheck
+    - govet
+    - staticcheck
+    - ineffassign
+    - misspell
+    - godot
+  settings:
+    staticcheck:
+      checks:
+        - "all"
+        - "-ST1000"  # package doc per file; doc lives only in statuscast.go
+        - "-ST1020"  # exported symbol doc; too noisy to enforce retroactively
+        - "-SA5011"  # false positive: doesn't track that t.Fatal stops execution
+    godot:
+      scope: declarations
+      exclude:
+        - "^TODO"
+        - "^FIXME"
+        - "^NOTE"
+  exclusions:
+    rules:
+      # Auto-generated ogen client — never lint
+      - path: internal/
+        linters: [errcheck, govet, staticcheck, ineffassign, misspell, godot]
+      # Test files: deliberate error discards (_, _ = w.Write(...)) and relaxed docs
+      - path: _test\.go
+        linters: [errcheck, godot]
+
+formatters:
+  enable:
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - statuscast-go
+  exclusions:
+    paths:
+      - internal/
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0

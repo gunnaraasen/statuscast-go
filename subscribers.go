@@ -369,4 +369,3 @@ func mapSubscriberSearchItem(item *api.APIV4SubscribersSearchPostOKItemsItem) *S
 	}
 	return s
 }
-

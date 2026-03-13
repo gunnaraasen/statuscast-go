@@ -15,7 +15,7 @@ func TestIDToInt32_Valid(t *testing.T) {
 		{"1", 1},
 		{"42", 42},
 		{"-1", -1},
-		{"2147483647", 2147483647},  // math.MaxInt32
+		{"2147483647", 2147483647},   // math.MaxInt32
 		{"-2147483648", -2147483648}, // math.MinInt32
 	}
 	for _, tc := range cases {
@@ -78,8 +78,8 @@ func TestMapAPIComponentStatus(t *testing.T) {
 		{"DegradedPerformance", StatusDegradedPerf},
 		{"Unavailable", StatusMajorOutage},
 		{"Maintenance", StatusUnderMaintenance},
-		{"Unknown", StatusOperational},  // default
-		{"", StatusOperational},          // default
+		{"Unknown", StatusOperational},       // default
+		{"", StatusOperational},              // default
 		{"informational", StatusOperational}, // case-sensitive default
 	}
 	for _, tc := range cases {
@@ -102,7 +102,7 @@ func TestMapFacadeComponentStatus(t *testing.T) {
 		{StatusPartialOutage, "Unavailable"},
 		{StatusMajorOutage, "Unavailable"},
 		{StatusUnderMaintenance, "Maintenance"},
-		{"", "Available"},             // default
+		{"", "Available"},               // default
 		{"unknown_status", "Available"}, // default
 	}
 	for _, tc := range cases {
@@ -135,7 +135,7 @@ func TestMapAPIIncidentStatus(t *testing.T) {
 		{"Monitoring", StatusMonitoring},
 		{"Closed", StatusResolved},
 		{"Unknown", StatusInvestigating}, // default
-		{"", StatusInvestigating},         // default
+		{"", StatusInvestigating},        // default
 	}
 	for _, tc := range cases {
 		got := mapAPIIncidentStatus(tc.input)

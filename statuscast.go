@@ -225,17 +225,17 @@ func (cc *ComponentsClient) SetStatus(ctx context.Context, id string, status Com
 
 // Incident represents a service disruption event with a full audit trail.
 type Incident struct {
-	ID             string             `json:"id"`
-	Title          string             `json:"title"`
-	Status         IncidentStatus     `json:"status"`
-	PostType       IncidentPostType   `json:"post_type"`
-	Components     []string           `json:"components"` // component IDs affected
-	CustomFields   map[string]any     `json:"custom_fields,omitempty"`
-	Updates        []IncidentUpdate   `json:"updates"`
-	ScheduledStart *time.Time         `json:"scheduled_start,omitempty"`
-	ScheduledEnd   *time.Time         `json:"scheduled_end,omitempty"`
-	CreatedAt      time.Time          `json:"created_at"`
-	ResolvedAt     *time.Time         `json:"resolved_at,omitempty"` // nil if unresolved
+	ID             string           `json:"id"`
+	Title          string           `json:"title"`
+	Status         IncidentStatus   `json:"status"`
+	PostType       IncidentPostType `json:"post_type"`
+	Components     []string         `json:"components"` // component IDs affected
+	CustomFields   map[string]any   `json:"custom_fields,omitempty"`
+	Updates        []IncidentUpdate `json:"updates"`
+	ScheduledStart *time.Time       `json:"scheduled_start,omitempty"`
+	ScheduledEnd   *time.Time       `json:"scheduled_end,omitempty"`
+	CreatedAt      time.Time        `json:"created_at"`
+	ResolvedAt     *time.Time       `json:"resolved_at,omitempty"` // nil if unresolved
 }
 
 // IncidentUpdate is a single timestamped message posted to an incident timeline.
