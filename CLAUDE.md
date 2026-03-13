@@ -33,7 +33,7 @@ go run github.com/ogen-go/ogen/cmd/ogen --config ogen.yml openapi.json
 ### Key files
 - `statuscast.go` — `Client` struct, all public types/constants, `New()` constructor, functional options
 - `helpers.go` — `idToInt32`, `int32ToID`, status/role enum mapping between API and facade
-- `components.go`, `incidents.go`, `subscribers.go`, `access.go`, `notifications.go`, `groups.go`, `reports.go`, `teams.go` — one file per sub-client
+- `components.go`, `incidents.go`, `subscribers.go`, `access.go`, `notifications.go`, `groups.go`, `reports.go` — one file per sub-client
 - `openapi.json` / `ogen.yml` — source of truth for regenerating `internal/`
 
 ### ID handling
@@ -48,12 +48,21 @@ API and facade use different strings for component status. Translation lives in 
 - Both `StatusPartialOutage` and `StatusMajorOutage` map to API `Unavailable`
 
 ### Unsupported operations
-Nine operations return `errors.New("not supported by StatusCast API v4")`:
-`Teams.List`, `Incidents.FileRCA`, `Subscribers.BulkImport`, `Notifications.GetLog`, `Notifications.ListLogs`, `Reports.IncidentSummary`, `Reports.ListRCAs`, `Access.SetPageVisibility`
+Six operations have no backing API endpoint and are not implemented (they have been removed from the codebase entirely, along with their associated types):
+`Teams.List`, `Incidents.FileRCA`, `Notifications.GetLog`, `Notifications.ListLogs`, `Reports.ListRCAs`, `Access.SetPageVisibility`
+
+`Subscribers.BulkImport` and `Reports.IncidentSummary` are implemented client-side (see below).
 
 ### Base URL
 `https://app.statuscast.com` (domain root). API paths contain `/api/v4/…` prefix so the server URL must be the domain root, not `https://api.statuscast.com/v1`.
 
+### Client-side implementations
+Two operations are implemented without a direct API endpoint:
+
+- **`Subscribers.BulkImport`** — parses CSV (`encoding/csv`), finds the `email` column by header name (case-insensitive), calls `APIV4SubscriberPost` per row. Empty/whitespace emails are `Skipped`; per-row API failures accumulate into `BulkImportResult.Errors` rather than returning a function error. Only structural CSV failures (missing header, malformed CSV) return an error.
+
+- **`Reports.IncidentSummary`** — calls `APIV4IncidentsPost` with `StartDateAfter`/`EndDateBefore` filters, paginating through all results (100/page). Computes MTTD (`DateCreated − StartDate` when `StartDate < DateCreated`) and MTTR (`EndDate − DateCreated` for resolved incidents) client-side.
+
 ## Testing
 
-Tests use `httptest.Server` as a mock backend. See `testhelpers_test.go` for `newMockClient()`, `jsonHandler()`, and `statusHandler()`. Each domain has its own `*_test.go`. `unsupported_test.go` asserts all nine unsupported operations return the right error.
+Tests use `httptest.Server` as a mock backend. See `testhelpers_test.go` for `newMockClient()`, `jsonHandler()`, and `statusHandler()`. Each domain has its own `*_test.go`.
