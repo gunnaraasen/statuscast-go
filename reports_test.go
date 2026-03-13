@@ -3,6 +3,7 @@ package statuscast_test
 import (
 	"context"
 	"net/http"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -139,5 +140,48 @@ func TestReportsIncidentSummary_Unauthorized(t *testing.T) {
 	_, _, err := c.Reports.IncidentSummary(context.Background(), time.Now().Add(-24*time.Hour), time.Now())
 	if err != statuscast.ErrUnauthorized {
 		t.Errorf("expected ErrUnauthorized, got %v", err)
+	}
+}
+
+func TestReportsIncidentSummary_Paginated(t *testing.T) {
+	// Page 1 returns incident 1 (component 10); page 2 returns incident 2 (component 20).
+	const page1JSON = `{
+		"items": [{"id":1,"dateCreated":"2024-01-15T10:30:00Z","startDate":"2024-01-15T10:00:00Z","endDate":"2024-01-15T12:30:00Z","affectedComponents":[{"componentId":10}]}],
+		"totalItems":2,"page":1,"pages":2
+	}`
+	const page2JSON = `{
+		"items": [{"id":2,"dateCreated":"2024-01-20T08:00:00Z","startDate":"2024-01-20T08:00:00Z","endDate":"2024-01-20T09:00:00Z","affectedComponents":[{"componentId":20}]}],
+		"totalItems":2,"page":2,"pages":2
+	}`
+	var calls atomic.Int32
+	mux := http.NewServeMux()
+	mux.HandleFunc("POST /api/v4/incidents", func(w http.ResponseWriter, r *http.Request) {
+		n := calls.Add(1)
+		if n == 1 {
+			jsonHandler(200, page1JSON)(w, r)
+		} else {
+			jsonHandler(200, page2JSON)(w, r)
+		}
+	})
+	c := newMockClient(t, mux)
+
+	since := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	until := time.Date(2024, 1, 31, 23, 59, 59, 0, time.UTC)
+	report, _, err := c.Reports.IncidentSummary(context.Background(), since, until)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if calls.Load() != 2 {
+		t.Errorf("API calls = %d; want 2", calls.Load())
+	}
+	if report.TotalIncidents != 2 {
+		t.Errorf("TotalIncidents = %d; want 2", report.TotalIncidents)
+	}
+	// Both components present in ByComponent.
+	if report.ByComponent["10"] != 1 {
+		t.Errorf("ByComponent[\"10\"] = %d; want 1", report.ByComponent["10"])
+	}
+	if report.ByComponent["20"] != 1 {
+		t.Errorf("ByComponent[\"20\"] = %d; want 1", report.ByComponent["20"])
 	}
 }
