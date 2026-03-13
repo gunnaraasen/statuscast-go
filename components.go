@@ -179,4 +179,3 @@ func mapComponentsGetOKItem(item *api.APIV4ComponentsGetOKItem) *Component {
 		ParentID:    optInt32ToID(item.ParentId),
 	}
 }
-
