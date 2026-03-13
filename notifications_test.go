@@ -73,7 +73,7 @@ func TestNotificationsUpdateTemplate_Success(t *testing.T) {
 }
 
 func TestNotificationsUpdateTemplate_InvalidID(t *testing.T) {
-	c, _ := statuscast.New(statuscast.WithAPIKey("key"))
+	c := mustNew(t, statuscast.WithAPIKey("key"))
 	_, _, err := c.Notifications.UpdateTemplate(context.Background(), "bad-id", statuscast.NotificationTemplate{})
 	if err == nil {
 		t.Fatal("expected error for invalid ID, got nil")

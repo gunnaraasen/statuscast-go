@@ -15,7 +15,6 @@ linters:
         - "all"
         - "-ST1000"  # package doc per file; doc lives only in statuscast.go
         - "-ST1020"  # exported symbol doc; too noisy to enforce retroactively
-        - "-SA5011"  # false positive: doesn't track that t.Fatal stops execution
     godot:
       scope: declarations
       exclude:

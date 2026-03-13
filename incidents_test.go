@@ -90,7 +90,7 @@ func TestIncidentsCreate_WithComponents(t *testing.T) {
 }
 
 func TestIncidentsCreate_InvalidComponentID(t *testing.T) {
-	c, _ := statuscast.New(statuscast.WithAPIKey("key"))
+	c := mustNew(t, statuscast.WithAPIKey("key"))
 	_, _, err := c.Incidents.Create(context.Background(), statuscast.CreateIncidentRequest{
 		Title:      "Test",
 		Components: []string{"not-a-number"},
@@ -132,7 +132,7 @@ func TestIncidentsGet_Success(t *testing.T) {
 }
 
 func TestIncidentsGet_InvalidID(t *testing.T) {
-	c, _ := statuscast.New(statuscast.WithAPIKey("key"))
+	c := mustNew(t, statuscast.WithAPIKey("key"))
 	_, _, err := c.Incidents.Get(context.Background(), "bad-id")
 	if err == nil {
 		t.Fatal("expected error for invalid ID, got nil")
@@ -242,7 +242,7 @@ func TestIncidentsPostUpdate_Success(t *testing.T) {
 }
 
 func TestIncidentsPostUpdate_InvalidID(t *testing.T) {
-	c, _ := statuscast.New(statuscast.WithAPIKey("key"))
+	c := mustNew(t, statuscast.WithAPIKey("key"))
 	_, _, err := c.Incidents.PostUpdate(context.Background(), "bad-id", statuscast.UpdateIncidentRequest{Message: "m"})
 	if err == nil {
 		t.Fatal("expected error for invalid ID, got nil")
