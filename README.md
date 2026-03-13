@@ -110,6 +110,14 @@ _, err = client.Components.Delete(ctx, comp.ID)
 | `StatusMajorOutage` | `major_outage` |
 | `StatusUnderMaintenance` | `under_maintenance` |
 
+**Component type constants:**
+
+| Constant | Value |
+|---|---|
+| `ComponentTypeNative` | `native` |
+| `ComponentTypeBeacon` | `beacon` |
+| `ComponentTypeThirdPt` | `third_party` |
+
 ### Incidents
 
 ```go
@@ -142,6 +150,23 @@ result, _, err := client.Incidents.List(ctx,
 )
 ```
 
+**Incident status constants:**
+
+| Constant | Value |
+|---|---|
+| `StatusInvestigating` | `investigating` |
+| `StatusIdentified` | `identified` |
+| `StatusMonitoring` | `monitoring` |
+| `StatusResolved` | `resolved` |
+
+**Incident post type constants:**
+
+| Constant | Value |
+|---|---|
+| `PostTypeOutage` | `outage` |
+| `PostTypeMaintenance` | `maintenance` |
+| `PostTypeInfo` | `info` |
+
 ### Subscribers
 
 ```go
@@ -159,6 +184,16 @@ fmt.Printf("Imported: %d, Failed: %d\n", result.Imported, result.Failed)
 // Remove a subscriber
 _, err = client.Subscribers.Remove(ctx, sub.ID)
 ```
+
+**Notification channel constants:**
+
+| Constant | Value |
+|---|---|
+| `ChannelEmail` | `email` |
+| `ChannelSMS` | `sms` |
+| `ChannelSlack` | `slack` |
+| `ChannelTeams` | `teams` |
+| `ChannelWebhook` | `webhook` |
 
 ### Reports
 
@@ -193,6 +228,15 @@ _, _, err = client.Access.UpdateRole(ctx, user.ID, statuscast.RoleAdministrator)
 // Remove user (requires UUID — use the ID returned by InviteUser or ListUsers)
 _, err = client.Access.RemoveUser(ctx, user.ID)
 ```
+
+**Role constants:**
+
+| Constant | Value |
+|---|---|
+| `RoleEmployee` | `employee` |
+| `RoleManager` | `manager` |
+| `RoleAdministrator` | `administrator` |
+| `RoleCompanyAdministrator` | `company_administrator` |
 
 ### Error handling
 
