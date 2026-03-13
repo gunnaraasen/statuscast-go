@@ -65,4 +65,23 @@ Two operations are implemented without a direct API endpoint:
 
 ## Testing
 
-Tests use `httptest.Server` as a mock backend. See `testhelpers_test.go` for `newMockClient()`, `jsonHandler()`, and `statusHandler()`. Each domain has its own `*_test.go`.
+Tests use `httptest.Server` as a mock backend. See `testhelpers_test.go` for helpers:
+- `mustNew(t, opts...)` — creates a Client from opts; panics on error (not `t.Fatal`) so SA5011 models it as a definite non-nil return
+- `newMockClient(t, handler)` — starts an httptest.Server and returns a configured Client; server closed via `t.Cleanup`
+- `jsonHandler(status, body)` — writes JSON with the given status code
+- `statusHandler(status)` — writes only a status code
+
+Each domain has its own `*_test.go`. Routes are registered with `http.NewServeMux()` using Go 1.22 method+path syntax (e.g. `GET /api/v4/component/{id}`).
+
+## Linting
+
+Run the linter:
+```bash
+golangci-lint run ./...
+```
+
+`.golangci.yml` enables: `errcheck`, `govet`, `staticcheck` (all checks; ST1000 and ST1020 disabled), `ineffassign`, `misspell`, `godot` (declarations scope). Formatter: `goimports` with local prefix `statuscast-go`.
+
+Exclusions:
+- `internal/` — never linted (ogen-generated)
+- `*_test.go` — errcheck and godot disabled
