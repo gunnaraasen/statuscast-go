@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 
 	"github.com/urfave/cli/v3"
 
@@ -15,9 +14,6 @@ const clientKey = "client"
 
 func buildClient(ctx context.Context, cmd *cli.Command) (context.Context, error) {
 	key := cmd.String("api-key")
-	if key == "" {
-		key = os.Getenv("STATUSCAST_API_KEY")
-	}
 	if key == "" {
 		return ctx, errors.New("API key required: set --api-key or STATUSCAST_API_KEY")
 	}
