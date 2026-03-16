@@ -37,7 +37,7 @@ func subscribersList() *cli.Command {
 		},
 		Action: func(ctx context.Context, cmd *cli.Command) error {
 			c := getClient(cmd)
-			page := statuscast.Pagination{Page: int(cmd.Int("page")), PerPage: int(cmd.Int("per-page"))}
+			page := getPagination(cmd)
 			result, _, err := c.Subscribers.List(ctx, cmd.String("group-id"), page)
 			if err != nil {
 				return err
@@ -47,11 +47,7 @@ func subscribersList() *cli.Command {
 			}
 			rows := make([][]string, 0, len(result.Items))
 			for _, s := range result.Items {
-				channels := make([]string, 0, len(s.Channels))
-				for _, ch := range s.Channels {
-					channels = append(channels, string(ch))
-				}
-				rows = append(rows, []string{s.ID, s.Email, s.Phone, strings.Join(channels, ","), formatTime(s.CreatedAt)})
+				rows = append(rows, []string{s.ID, s.Email, s.Phone, strings.Join(channelStrings(s.Channels), ","), formatTime(s.CreatedAt)})
 			}
 			printTable([]string{"ID", "EMAIL", "PHONE", "CHANNELS", "CREATED"}, rows)
 			return nil
@@ -76,17 +72,13 @@ func subscribersGet() *cli.Command {
 			if useJSON(cmd) {
 				return printJSON(s)
 			}
-			channels := make([]string, 0, len(s.Channels))
-			for _, ch := range s.Channels {
-				channels = append(channels, string(ch))
-			}
 			printTable(
 				[]string{"FIELD", "VALUE"},
 				[][]string{
 					{"ID", s.ID},
 					{"Email", s.Email},
 					{"Phone", s.Phone},
-					{"Channels", strings.Join(channels, ", ")},
+					{"Channels", strings.Join(channelStrings(s.Channels), ", ")},
 					{"Groups", strings.Join(s.Groups, ", ")},
 					{"Components", strings.Join(s.Components, ", ")},
 					{"Created", formatTime(s.CreatedAt)},
@@ -116,9 +108,7 @@ func subscribersAdd() *cli.Command {
 				Groups:     cmd.StringSlice("group"),
 				Components: cmd.StringSlice("component"),
 			}
-			for _, ch := range cmd.StringSlice("channel") {
-				req.Channels = append(req.Channels, statuscast.NotificationChannel(ch))
-			}
+			req.Channels = toChannels(cmd.StringSlice("channel"))
 			s, _, err := c.Subscribers.Add(ctx, req)
 			if err != nil {
 				return err
@@ -151,9 +141,7 @@ func subscribersUpdate() *cli.Command {
 				Groups:     cmd.StringSlice("group"),
 				Components: cmd.StringSlice("component"),
 			}
-			for _, ch := range cmd.StringSlice("channel") {
-				req.Channels = append(req.Channels, statuscast.NotificationChannel(ch))
-			}
+			req.Channels = toChannels(cmd.StringSlice("channel"))
 			s, _, err := c.Subscribers.Update(ctx, cmd.Args().First(), req)
 			if err != nil {
 				return err

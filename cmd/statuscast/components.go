@@ -36,7 +36,7 @@ func componentsList() *cli.Command {
 		},
 		Action: func(ctx context.Context, cmd *cli.Command) error {
 			c := getClient(cmd)
-			page := statuscast.Pagination{Page: int(cmd.Int("page")), PerPage: int(cmd.Int("per-page"))}
+			page := getPagination(cmd)
 			result, _, err := c.Components.List(ctx, cmd.String("parent-id"), page)
 			if err != nil {
 				return err
