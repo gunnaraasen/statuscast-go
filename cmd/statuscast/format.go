@@ -27,11 +27,11 @@ func newTabWriter() *tabwriter.Writer {
 
 func printTable(headers []string, rows [][]string) {
 	w := newTabWriter()
-	fmt.Fprintln(w, strings.Join(headers, "\t"))
+	_, _ = fmt.Fprintln(w, strings.Join(headers, "\t"))
 	for _, row := range rows {
-		fmt.Fprintln(w, strings.Join(row, "\t"))
+		_, _ = fmt.Fprintln(w, strings.Join(row, "\t"))
 	}
-	w.Flush()
+	_ = w.Flush()
 }
 
 func formatTime(t time.Time) string {
