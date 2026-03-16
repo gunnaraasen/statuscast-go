@@ -56,7 +56,7 @@ func incidentsList() *cli.Command {
 				}
 				filter.Until = &t
 			}
-			page := statuscast.Pagination{Page: int(cmd.Int("page")), PerPage: int(cmd.Int("per-page"))}
+			page := getPagination(cmd)
 			result, _, err := c.Incidents.List(ctx, filter, page)
 			if err != nil {
 				return err
@@ -141,9 +141,7 @@ func incidentsCreate() *cli.Command {
 				TemplateID: cmd.String("template-id"),
 				Notify:     cmd.Bool("notify"),
 			}
-			for _, ch := range cmd.StringSlice("channel") {
-				req.Channels = append(req.Channels, statuscast.NotificationChannel(ch))
-			}
+			req.Channels = toChannels(cmd.StringSlice("channel"))
 			inc, _, err := c.Incidents.Create(ctx, req)
 			if err != nil {
 				return err

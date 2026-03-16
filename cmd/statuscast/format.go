@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/urfave/cli/v3"
+
+	statuscast "statuscast-go"
 )
 
 func useJSON(cmd *cli.Command) bool {
@@ -68,6 +70,26 @@ var timeFormats = []string{
 	time.RFC3339,
 	"2006-01-02T15:04",
 	"2006-01-02",
+}
+
+func getPagination(cmd *cli.Command) statuscast.Pagination {
+	return statuscast.Pagination{Page: int(cmd.Int("page")), PerPage: int(cmd.Int("per-page"))}
+}
+
+func toChannels(ss []string) []statuscast.NotificationChannel {
+	ch := make([]statuscast.NotificationChannel, len(ss))
+	for i, s := range ss {
+		ch[i] = statuscast.NotificationChannel(s)
+	}
+	return ch
+}
+
+func channelStrings(channels []statuscast.NotificationChannel) []string {
+	ss := make([]string, len(channels))
+	for i, ch := range channels {
+		ss[i] = string(ch)
+	}
+	return ss
 }
 
 func parseTime(s string) (time.Time, error) {
