@@ -16,10 +16,28 @@ A Go SDK for the [StatusCast](https://statuscast.com) API. Manage status pages, 
 
 ## Installation
 
+### SDK
+
 Requires Go 1.22 or later.
 
 ```bash
 go get statuscast-go
+```
+
+### CLI
+
+Download a pre-built binary from the [releases page](https://github.com/gunnaraasen/statuscast-go/releases), or install from source:
+
+```bash
+go install statuscast-go/cmd/statuscast@latest
+```
+
+### MCP server
+
+Download a pre-built binary from the [releases page](https://github.com/gunnaraasen/statuscast-go/releases), or install from source:
+
+```bash
+go install statuscast-go/cmd/statuscast-mcp@latest
 ```
 
 ## Quick Start
@@ -272,6 +290,112 @@ if errors.As(err, &apiErr) {
 | `ErrNotFound` | 404 |
 | `ErrRateLimited` | 429 |
 | `ErrIncidentClosed` | — |
+
+## CLI
+
+The `statuscast` CLI manages your StatusCast status page from the terminal.
+
+### Authentication
+
+Pass your API key via flag or environment variable:
+
+```bash
+export STATUSCAST_API_KEY=your-api-key
+statuscast components list
+```
+
+```bash
+statuscast --api-key your-api-key components list
+```
+
+### Global flags
+
+| Flag | Description |
+|---|---|
+| `--api-key` | StatusCast API key (`STATUSCAST_API_KEY`) |
+| `--base-url` | Override the default API base URL |
+| `--json` | Output results as JSON |
+
+### Commands
+
+```
+statuscast components list   [--parent-id ID] [--page N] [--per-page N]
+statuscast components get    <id>
+statuscast components create --name NAME [--description TEXT] [--type TYPE] [--status STATUS] [--parent-id ID]
+statuscast components update <id> [--name NAME] [--description TEXT] [--status STATUS]
+statuscast components delete <id>
+statuscast components set-status <id> <status>
+
+statuscast incidents list    [--active] [--component ID]... [--since DATE] [--until DATE] [--page N] [--per-page N]
+statuscast incidents get     <id>
+statuscast incidents create  --title TITLE --message MESSAGE [--status STATUS] [--type TYPE] [--component ID]... [--channel CHANNEL]... [--template-id ID] [--notify]
+statuscast incidents update  <id> --message MESSAGE [--status STATUS] [--notify]
+statuscast incidents resolve <id> --message MESSAGE [--notify]
+
+statuscast subscribers list        [--group-id ID] [--page N] [--per-page N]
+statuscast subscribers get         <id>
+statuscast subscribers add         --email EMAIL [--phone PHONE] [--group ID]... [--component ID]... [--channel CHANNEL]...
+statuscast subscribers update      <id> [--group ID]... [--component ID]... [--channel CHANNEL]...
+statuscast subscribers remove      <id>
+statuscast subscribers bulk-import --file subscribers.csv
+
+statuscast groups list [--page N] [--per-page N]
+
+statuscast notifications templates list   [--page N] [--per-page N]
+statuscast notifications templates create --name NAME --channel CHANNEL --body BODY [--subject SUBJECT]
+statuscast notifications templates update <id> [--name NAME] [--channel CHANNEL] [--body BODY] [--subject SUBJECT]
+
+statuscast reports uptime           [--since DATE] [--until DATE]
+statuscast reports incident-summary --since DATE --until DATE
+
+statuscast access users list        [--page N] [--per-page N]
+statuscast access users invite      --email EMAIL --name NAME --role ROLE
+statuscast access users update-role <id> --role ROLE
+statuscast access users remove      <id>
+```
+
+Dates accept RFC 3339 (`2006-01-02T15:04:05Z`) or plain date (`2006-01-02`) format.
+
+## MCP server
+
+`statuscast-mcp` is a [Model Context Protocol](https://modelcontextprotocol.io) stdio server that exposes Statuscast operations as tools for Claude and other MCP-compatible clients.
+
+### Running the server
+
+```bash
+export STATUSCAST_API_KEY=your-api-key
+statuscast-mcp
+```
+
+### Configuring Claude Desktop
+
+Add the server to `~/Library/Application Support/Claude/claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "statuscast": {
+      "command": "/path/to/statuscast-mcp",
+      "env": {
+        "STATUSCAST_API_KEY": "your-api-key"
+      }
+    }
+  }
+}
+```
+
+### Available tools
+
+| Tool | Description |
+|---|---|
+| `list_components` | List all components and their current status |
+| `set_component_status` | Update a component's status |
+| `list_incidents` | List incidents with optional filters |
+| `create_incident` | Open a new incident |
+| `update_incident` | Post an update to an existing incident |
+| `resolve_incident` | Resolve an incident |
+| `get_uptime_report` | Get uptime percentages for a time window |
+| `get_incident_summary` | Get MTTD/MTTR analytics for a time window |
 
 ## Contributing
 

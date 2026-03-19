@@ -1,0 +1,68 @@
+version: 2
+
+project_name: statuscast
+
+builds:
+  - id: statuscast
+    binary: statuscast
+    main: ./cmd/statuscast
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+
+  - id: statuscast-mcp
+    binary: statuscast-mcp
+    main: ./cmd/statuscast-mcp
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+
+archives:
+  - id: statuscast
+    builds:
+      - statuscast
+    name_template: "statuscast_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+
+  - id: statuscast-mcp
+    builds:
+      - statuscast-mcp
+    name_template: "statuscast-mcp_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^ci:"
+      - "^chore:"
+
+release:
+  github:
+    owner: gunnaraasen
+    name: statuscast-go
