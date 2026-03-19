@@ -71,6 +71,36 @@ Two operations are implemented without a direct API endpoint:
 
 - **`Reports.IncidentSummary`** — calls `APIV4IncidentsPost` with `StartDateAfter`/`EndDateBefore` filters, paginating through all results (100/page). Computes MTTD (`DateCreated − StartDate` when `StartDate < DateCreated`) and MTTR (`EndDate − DateCreated` for resolved incidents) client-side.
 
+## MCP server
+
+`cmd/statuscast-mcp/` is a stdio MCP server built with `github.com/modelcontextprotocol/go-sdk/mcp`.
+
+### Structure
+- `main.go` — reads `STATUSCAST_API_KEY`, constructs a `statuscast.Client`, registers tools, runs stdio transport
+- `tools.go` — `registerTools` registers all tools; each tool is a self-contained `mcp.AddTool` call
+- `tools_test.go` — tests for tool handlers
+
+### Tools exposed
+| Tool | SDK call |
+|------|----------|
+| `list_components` | `Components.List` |
+| `set_component_status` | `Components.SetStatus` |
+| `list_incidents` | `Incidents.List` |
+| `create_incident` | `Incidents.Create` |
+| `update_incident` | `Incidents.PostUpdate` |
+| `resolve_incident` | `Incidents.Resolve` |
+| `get_uptime_report` | `Reports.Uptime` |
+| `get_incident_summary` | `Reports.IncidentSummary` |
+
+### MCP SDK conventions
+- Server: `mcp.NewServer(&mcp.Implementation{Name: "statuscast", Version: "1.0.0"}, nil)`
+- Register tools: `mcp.AddTool(s, &mcp.Tool{Name: ..., Description: ...}, handlerFunc)`
+- Handler signature: `func(ctx, *mcp.CallToolRequest, args In) (*mcp.CallToolResult, any, error)`
+- Args struct: non-pointer fields = required, pointer fields = optional; tags: `json` + `jsonschema`
+- Result helper: `&mcp.CallToolResult{Content: []mcp.Content{&mcp.TextContent{Text: "..."}}}`
+- Transport: `s.Run(ctx, &mcp.StdioTransport{})`
+- Use `modelcontextprotocol/go-sdk` — **not** `mark3labs/mcp-go`
+
 ## Testing
 
 Tests use `httptest.Server` as a mock backend. See `testhelpers_test.go` for helpers:
