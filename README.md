@@ -384,6 +384,56 @@ Add the server to `~/Library/Application Support/Claude/claude_desktop_config.js
 }
 ```
 
+### Configuring Claude Code
+
+Use the `claude mcp add` command:
+
+```bash
+claude mcp add --transport stdio --env STATUSCAST_API_KEY=your-api-key statuscast -- /path/to/statuscast-mcp
+```
+
+By default this is scoped to the current project (private to you, stored in `~/.claude.json`). To share the configuration with your team, use `--scope project`, which writes to `.mcp.json` in the project root:
+
+```bash
+claude mcp add --scope project --transport stdio statuscast -- /path/to/statuscast-mcp
+```
+
+Then set `STATUSCAST_API_KEY` in your environment before starting Claude Code. You can also add it directly in `.mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "statuscast": {
+      "type": "stdio",
+      "command": "/path/to/statuscast-mcp",
+      "env": {
+        "STATUSCAST_API_KEY": "${STATUSCAST_API_KEY}"
+      }
+    }
+  }
+}
+```
+
+### Configuring Kiro
+
+Add the server to `.kiro/settings/mcp.json` (workspace) or `~/.kiro/settings/mcp.json` (global):
+
+```json
+{
+  "mcpServers": {
+    "statuscast": {
+      "command": "/path/to/statuscast-mcp",
+      "args": [],
+      "env": {
+        "STATUSCAST_API_KEY": "${STATUSCAST_API_KEY}"
+      }
+    }
+  }
+}
+```
+
+Make sure `STATUSCAST_API_KEY` is exported in your shell before launching Kiro.
+
 ### Available tools
 
 | Tool | Description |
