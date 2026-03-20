@@ -180,13 +180,9 @@ func registerTools(s *mcp.Server, client *statuscast.Client) {
 		Name:        "get_uptime_report",
 		Description: "Get uptime percentages per component for a given time window.",
 	}, func(ctx context.Context, _ *mcp.CallToolRequest, args getUptimeReportArgs) (*mcp.CallToolResult, any, error) {
-		since, err := time.Parse(time.RFC3339, args.Since)
+		since, until, err := parseWindow(args.Since, args.Until)
 		if err != nil {
-			return nil, nil, fmt.Errorf("invalid since: %w", err)
-		}
-		until, err := time.Parse(time.RFC3339, args.Until)
-		if err != nil {
-			return nil, nil, fmt.Errorf("invalid until: %w", err)
+			return nil, nil, err
 		}
 		reports, _, err := client.Reports.Uptime(ctx, since, until)
 		if err != nil {
@@ -203,7 +199,7 @@ func registerTools(s *mcp.Server, client *statuscast.Client) {
 			}
 			fmt.Fprintf(&sb, "%s: %.4f%% uptime (%s – %s)\n",
 				name, r.Uptime,
-				r.WindowStart.Format("2006-01-02"), r.WindowEnd.Format("2006-01-02"))
+				r.WindowStart.Format(time.DateOnly), r.WindowEnd.Format(time.DateOnly))
 		}
 		return textResult(sb.String()), nil, nil
 	})
@@ -218,13 +214,9 @@ func registerTools(s *mcp.Server, client *statuscast.Client) {
 		Name:        "get_incident_summary",
 		Description: "Get MTTD/MTTR analytics for incidents in a given time window.",
 	}, func(ctx context.Context, _ *mcp.CallToolRequest, args getIncidentSummaryArgs) (*mcp.CallToolResult, any, error) {
-		since, err := time.Parse(time.RFC3339, args.Since)
+		since, until, err := parseWindow(args.Since, args.Until)
 		if err != nil {
-			return nil, nil, fmt.Errorf("invalid since: %w", err)
-		}
-		until, err := time.Parse(time.RFC3339, args.Until)
-		if err != nil {
-			return nil, nil, fmt.Errorf("invalid until: %w", err)
+			return nil, nil, err
 		}
 		report, _, err := client.Reports.IncidentSummary(ctx, since, until)
 		if err != nil {
@@ -242,6 +234,18 @@ func registerTools(s *mcp.Server, client *statuscast.Client) {
 		}
 		return textResult(sb.String()), nil, nil
 	})
+}
+
+func parseWindow(since, until string) (time.Time, time.Time, error) {
+	s, err := time.Parse(time.RFC3339, since)
+	if err != nil {
+		return time.Time{}, time.Time{}, fmt.Errorf("invalid since: %w", err)
+	}
+	u, err := time.Parse(time.RFC3339, until)
+	if err != nil {
+		return time.Time{}, time.Time{}, fmt.Errorf("invalid until: %w", err)
+	}
+	return s, u, nil
 }
 
 func textResult(text string) *mcp.CallToolResult {
