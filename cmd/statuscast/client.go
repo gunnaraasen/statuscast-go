@@ -13,6 +13,10 @@ import (
 const clientKey = "client"
 
 func buildClient(ctx context.Context, cmd *cli.Command) (context.Context, error) {
+	if cmd.Args().First() == "version" {
+		return ctx, nil
+	}
+
 	key := cmd.String("api-key")
 	if key == "" {
 		return ctx, errors.New("API key required: set --api-key or STATUSCAST_API_KEY")

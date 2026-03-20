@@ -37,6 +37,7 @@ func newApp() *cli.Command {
 			notificationsCommand(),
 			reportsCommand(),
 			accessCommand(),
+			versionCommand(),
 		},
 	}
 }
