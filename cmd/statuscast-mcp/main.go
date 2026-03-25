@@ -18,7 +18,11 @@ func main() {
 	if apiKey == "" {
 		log.Fatal("STATUSCAST_API_KEY is required")
 	}
-	client, err := statuscast.New(statuscast.WithAPIKey(apiKey))
+	opts := []statuscast.Option{statuscast.WithAPIKey(apiKey)}
+	if baseURL := os.Getenv("STATUSCAST_BASE_URL"); baseURL != "" {
+		opts = append(opts, statuscast.WithBaseURL(baseURL))
+	}
+	client, err := statuscast.New(opts...)
 	if err != nil {
 		log.Fatalf("failed to create client: %v", err)
 	}
