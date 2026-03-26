@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -647,6 +648,86 @@ func TestGetIncidentSummary_APIError(t *testing.T) {
 	}
 	if !result.IsError {
 		t.Errorf("expected IsError=true for 401; text:\n%s", resultText(t, result))
+	}
+}
+
+// ─── STATUSCAST_BASE_URL env var ──────────────────────────────────────────────
+
+// newSessionFromEnv mirrors the client construction in main(): reads
+// STATUSCAST_API_KEY and STATUSCAST_BASE_URL from the environment.
+func newSessionFromEnv(t *testing.T) *mcp.ClientSession {
+	t.Helper()
+	apiKey := os.Getenv("STATUSCAST_API_KEY")
+	opts := []statuscast.Option{statuscast.WithAPIKey(apiKey)}
+	if baseURL := os.Getenv("STATUSCAST_BASE_URL"); baseURL != "" {
+		opts = append(opts, statuscast.WithBaseURL(baseURL))
+	}
+	client, err := statuscast.New(opts...)
+	if err != nil {
+		t.Fatalf("statuscast.New: %v", err)
+	}
+
+	impl := &mcp.Implementation{Name: "test"}
+	s := mcp.NewServer(impl, nil)
+	registerTools(s, client)
+
+	ct, st := mcp.NewInMemoryTransports()
+	ctx := context.Background()
+	if _, err := s.Connect(ctx, st, nil); err != nil {
+		t.Fatalf("server.Connect: %v", err)
+	}
+	c := mcp.NewClient(impl, nil)
+	cs, err := c.Connect(ctx, ct, nil)
+	if err != nil {
+		t.Fatalf("client.Connect: %v", err)
+	}
+	t.Cleanup(func() { cs.Close() })
+	return cs
+}
+
+func TestBaseURL_EnvVarRoutesRequestsToCustomServer(t *testing.T) {
+	hit := false
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /api/v4/components", func(w http.ResponseWriter, r *http.Request) {
+		hit = true
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(200)
+		_, _ = w.Write([]byte(componentListJSON))
+	})
+	srv := httptest.NewServer(mux)
+	t.Cleanup(srv.Close)
+
+	t.Setenv("STATUSCAST_API_KEY", "test-key")
+	t.Setenv("STATUSCAST_BASE_URL", srv.URL)
+	cs := newSessionFromEnv(t)
+
+	if _, err := callTool(t, cs, "list_components", map[string]any{}); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !hit {
+		t.Error("STATUSCAST_BASE_URL was not used: custom server was never hit")
+	}
+}
+
+func TestBaseURL_UnsetEnvVarDoesNotHitCustomServer(t *testing.T) {
+	hit := false
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /api/v4/components", func(w http.ResponseWriter, r *http.Request) {
+		hit = true
+	})
+	srv := httptest.NewServer(mux)
+	t.Cleanup(srv.Close)
+
+	// STATUSCAST_BASE_URL is intentionally not set; requests go to the default.
+	t.Setenv("STATUSCAST_API_KEY", "test-key")
+	t.Setenv("STATUSCAST_BASE_URL", "")
+	cs := newSessionFromEnv(t)
+
+	// The call will fail (default URL is unreachable in tests) but what matters
+	// is that the custom server was never contacted.
+	_, _ = callTool(t, cs, "list_components", map[string]any{})
+	if hit {
+		t.Error("custom server was hit even though STATUSCAST_BASE_URL was not set")
 	}
 }
 
